@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>你的专属法律人格结果</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;font-family:"微软雅黑",sans-serif;}
+        body{background:#f5f7fa;color:#333;min-height:100vh;padding:20px;}
+        .container{max-width:600px;width:100%;margin:0 auto;background:#fff;border-radius:20px;padding:35px 30px;box-shadow:0 4px 20px rgba(0,0,0,0.08);text-align:center;}
+        .type-tag{display:inline-block;padding:8px 20px;background:#e8f4ff;color:#409eff;border-radius:30px;font-size:16px;margin-bottom:15px;}
+        .law-name{font-size:26px;font-weight:bold;color:#2c3e50;margin-bottom:20px;}
+        .book-img{
+            width:70%;
+            max-width:300px;
+            border-radius:8px;
+            box-shadow:0 3px 12px rgba(0,0,0,0.12);
+            margin:10px auto 35px;
+            min-height:200px;
+            background:#f1f3f5;
+        }
+        .back-btn{display:inline-block;padding:12px 30px;background:#409eff;color:#fff;border-radius:10px;text-decoration:none;font-size:16px;}
+        .back-btn:hover{background:#2979ff;}
+        .tip{color:red;font-size:14px;}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="type-tag" id="typeTag"></div>
+        <h2 class="law-name" id="lawName"></h2>
+        <img class="book-img" id="bookImg" alt="对应法学教材封面" onerror="this.style.display='none'">
+        <!-- 已删除解析文字div -->
+        <a href="index.html" class="back-btn">重新测试</a>
+    </div>
+
+    <script>
+        // 本地图片路径配置，无需desc解析文本
+        const lawData = {
+            "ESTJ":{
+                name:"行政法",
+                img:"./bookcover/ESTJ.jpg"
+            },
+            "ESTP":{
+                name:"经济法",
+                img:"./bookcover/ESTP.jpg"
+            },
+            "ISTJ":{
+                name:"刑法",
+                img:"./bookcover/ISTJ.jpg"
+            },
+            "ISTP":{
+                name:"刑事诉讼法",
+                img:"./bookcover/ISTP.jpg"
+            },
+            "ENTJ":{
+                name:"公司法",
+                img:"./bookcover/ENTJ.jpg"
+            },
+            "ENTP":{
+                name:"商法",
+                img:"./bookcover/ENTP.jpg"
+            },
+            "INTJ":{
+                name:"法理学",
+                img:"./bookcover/INTJ.jpg"
+            },
+            "INTP":{
+                name:"知识产权法",
+                img:"./bookcover/INTP.jpg"
+            },
+            "ESFJ":{
+                name:"劳动法",
+                img:"./bookcover/ESFJ.jpg"
+            },
+            "ESFP":{
+                name:"民事诉讼法",
+                img:"./bookcover/ESFP.jpg"
+            },
+            "ISFJ":{
+                name:"婚姻继承法",
+                img:"./bookcover/ISFJ.jpg"
+            },
+            "ISFP":{
+                name:"侵权法",
+                img:"./bookcover/ISFP.jpg"
+            },
+            "ENFJ":{
+                name:"宪法",
+                img:"./bookcover/ENFJ.jpg"
+            },
+            "ENFP":{
+                name:"国际私法",
+                img:"./bookcover/ENFP.jpg"
+            },
+            "INFJ":{
+                name:"物权法",
+                img:"./bookcover/INFJ.jpg"
+            },
+            "INFP":{
+                name:"仲裁法",
+                img:"./bookcover/INFP.jpg"
+            }
+        };
+        // 获取url携带参数（原有逻辑完全保留）
+        const urlParams = new URLSearchParams(window.location.search);
+        const type = urlParams.get('type');
+        const scoreRaw = urlParams.get('score');
+        let score = null;
+        try{
+            if(scoreRaw) score = JSON.parse(decodeURIComponent(scoreRaw));
+        }catch(e){score=null;}
+
+        if(!score || !type || !lawData[type]){
+            document.querySelector(".container").innerHTML = `
+                <p class="tip">暂无测试数据，请返回首页重新答题！</p>
+                <a href="index.html" class="back-btn">返回首页</a>
+            `;
+        }else{
+            const info = lawData[type];
+            document.getElementById("typeTag").innerText = `你的人格类型：${type}`;
+            document.getElementById("lawName").innerText = `适配法学：${info.name}`;
+            document.getElementById("bookImg").src = info.img;
+            // 移除解析文案渲染代码
+        }
+    </script>
+</body>
+</html>
