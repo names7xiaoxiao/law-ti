@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>法律人格测试-答题中</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;font-family:"微软雅黑",sans-serif;}
+        body{background:#f5f7fa;color:#333;min-height:100vh;padding:20px;}
+        .container{max-width:600px;width:100%;margin:0 auto;background:#fff;border-radius:20px;padding:30px;box-shadow:0 4px 20px rgba(0,0,0,0.08);}
+        .progress{font-size:15px;color:#999;margin-bottom:20px;text-align:right;}
+        .q-title{font-size:20px;font-weight:500;margin-bottom:30px;line-height:1.6;}
+        .option{display:block;width:100%;padding:18px 20px;margin:12px 0;border:1px solid #e5e6eb;border-radius:12px;background:#fff;text-align:left;font-size:16px;cursor:pointer;transition:all 0.3s ease;}
+        .option:hover{border-color:#409eff;background:#f5faff;}
+        /* 选中选项蓝色标记样式 */
+        .option.active{
+            border-color:#409eff;
+            background:#e8f4ff;
+            color:#0066cc;
+        }
+        .page-btn-box{display:flex;gap:15px;margin-top:30px;justify-content:center;}
+        .page-btn{padding:10px 26px;border:none;border-radius:10px;background:#e8f4ff;color:#409eff;font-size:16px;cursor:pointer;transition:0.2s;}
+        .page-btn:disabled{background:#eee;color:#bbb;cursor:not-allowed;}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="progress">第 <span id="currNum">1</span> / 12 题</div>
+        <div class="q-title" id="questionTitle"></div>
+        <div id="optionBox"></div>
+        <!-- 上下题切换按钮 -->
+        <div class="page-btn-box">
+            <button class="page-btn" id="prevBtn" disabled>上一题</button>
+            <button class="page-btn" id="nextBtn" disabled>下一题</button>
+        </div>
+    </div>
+
+    <script>
+        // 全新题库：抽象设问 + 纯法学词汇选项，计分绑定不变
+        const originQuestionList = [
+            // E/I 维度
+            {
+                id:1,
+                title:"随机翻开法条汇编，第一眼更吸引你的词汇是？",
+                optA:"听证程序",
+                optB:"书证原件",
+                scoreA:{E:10},
+                scoreB:{I:10}
+            },
+            {
+                id:2,
+                title:"准备复习名词解释，你更愿意看哪个术语？",
+                optA:"当庭质证",
+                optB:"推定事实",
+                scoreA:{E:10},
+                scoreB:{I:10}
+            },
+            {
+                id:3,
+                title:"在教室翻阅教材，哪个词汇让你更有探索欲？",
+                optA:"公示催告",
+                optB:"占有改定",
+                scoreA:{E:10},
+                scoreB:{I:10}
+            },
+
+            // S/N 维度
+            {
+                id:4,
+                title:"凭第一印象，你更喜欢哪个词？",
+                optA:"物证勘验",
+                optB:"法律拟制",
+                scoreA:{S:10},
+                scoreB:{N:10}
+            },
+            {
+                id:5,
+                title:"自由联想法学概念，第一跳出脑海的是？",
+                optA:"时效中断",
+                optB:"权利本位",
+                scoreA:{S:10},
+                scoreB:{N:10}
+            },
+            {
+                id:6,
+                title:"整理笔记时，你会优先摘抄哪一类词汇？",
+                optA:"送达回证",
+                optB:"渊源效力",
+                scoreA:{S:10},
+                scoreB:{N:10}
+            },
+
+            // T/F 维度
+            {
+                id:7,
+                title:"两个术语二选一，你的直觉偏好是？",
+                optA:"过错推定",
+                optB:"善意取得",
+                scoreA:{T:10},
+                scoreB:{F:10}
+            },
+            {
+                id:8,
+                title:"你对哪个词汇更感兴趣？",
+                optA:"举证责任",
+                optB:"意思自治",
+                scoreA:{T:10},
+                scoreB:{F:10}
+            },
+            {
+                id:9,
+                title:"翻阅论文时，你对哪个主题更感兴趣？",
+                optA:"归责原则",
+                optB:"公序良俗",
+                scoreA:{T:10},
+                scoreB:{F:10}
+            },
+
+            // J/P 维度
+            {
+                id:10,
+                title:"分类收纳法时条，你会优先处理哪类概念？",
+                optA:"除斥期间",
+                optB:"情势变更",
+                scoreA:{J:10},
+                scoreB:{P:10}
+            },
+            {
+                id:11,
+                title:"模拟命题，你更想围绕哪个词出题？",
+                optA:"管辖恒定",
+                optB:"不安抗辩",
+                scoreA:{J:10},
+                scoreB:{P:10}
+            },
+            {
+                id:12,
+                title:"背诵清单置顶，优先记忆的是？",
+                optA:"表决规则",
+                optB:"流质条款",
+                scoreA:{J:10},
+                scoreB:{P:10}
+            }
+        ];
+
+        // 题目洗牌函数，打乱顺序
+        function shuffleArray(arr){
+            const copy = [...arr];
+            for(let i = copy.length - 1; i > 0; i--){
+                const j = Math.floor(Math.random() * (i + 1));
+                [copy[i], copy[j]] = [copy[j], copy[i]];
+            }
+            return copy;
+        }
+        const questionList = shuffleArray(originQuestionList);
+
+        let score = {E:0,I:0,S:0,N:0,T:0,F:0,J:0,P:0};
+        let current = 0;
+        // 存储每一题用户选择的分数
+        const answerRecord = Array(questionList.length).fill(null);
+
+        // 更新翻页按钮状态
+        function updateBtnState(){
+            const prevBtn = document.getElementById("prevBtn");
+            const nextBtn = document.getElementById("nextBtn");
+            prevBtn.disabled = current === 0;
+            nextBtn.disabled = answerRecord[current] === null;
+            nextBtn.innerText = current === questionList.length - 1 ? "查看结果" : "下一题";
+        }
+
+        // 渲染题目，回显已选选项蓝色标记
+        function renderQ(){
+            const q = questionList[current];
+            document.getElementById("currNum").innerText = current+1;
+            document.getElementById("questionTitle").innerText = q.title;
+            // 生成两个选项按钮
+            let html = `
+                <button class="option" data-score='${JSON.stringify(q.scoreA)}'>${q.optA}</button>
+                <button class="option" data-score='${JSON.stringify(q.scoreB)}'>${q.optB}</button>
+            `;
+            document.getElementById("optionBox").innerHTML = html;
+            const btns = document.querySelectorAll(".option");
+
+            // 如果当前题目已有选择，给对应按钮加上active蓝色样式
+            if(answerRecord[current]){
+                btns.forEach(btn=>{
+                    const s = JSON.parse(btn.dataset.score);
+                    // 对比存储的分值，匹配则高亮
+                    if(JSON.stringify(s) === JSON.stringify(answerRecord[current])){
+                        btn.classList.add("active");
+                    }
+                })
+            }
+
+            // 绑定选项点击事件
+            btns.forEach(btn=>{
+                btn.onclick = function(){
+                    // 清除同题其他按钮的蓝色标记
+                    btns.forEach(b=>b.classList.remove("active"));
+                    // 当前点击按钮开启蓝色高亮
+                    this.classList.add("active");
+                    const s = JSON.parse(this.dataset.score);
+                    choose(s);
+                    updateBtnState();
+                }
+            })
+            updateBtnState();
+        }
+
+        // 选择选项计分，记录答案
+        function choose(s){
+            // 先撤销当前题目旧分数
+            if(answerRecord[current]){
+                Object.keys(answerRecord[current]).forEach(key=>{
+                    score[key] -= answerRecord[current][key];
+                })
+            }
+            // 新增当前选择分数
+            Object.keys(s).forEach(key=>{
+                score[key] += s[key];
+            });
+            answerRecord[current] = s;
+        }
+
+        // 翻页按钮绑定
+        document.getElementById("prevBtn").onclick = function(){
+            if(current > 0){
+                current--;
+                renderQ();
+            }
+        }
+        document.getElementById("nextBtn").onclick = function(){
+            if(answerRecord[current] === null) return;
+            if(current < questionList.length - 1){
+                current++;
+                renderQ();
+            }else{
+                calcResult();
+            }
+        }
+
+        // 计算四维字母 + 同分兜底规则（完全保留原有逻辑无修改）
+        function calcResult(){
+            let type = "";
+            if(score.E > score.I) type += "E";
+            else if(score.I > score.E) type += "I";
+            else type += "I";
+
+            if(score.S > score.N) type += "S";
+            else if(score.N > score.S) type += "N";
+            else type += "N";
+
+            if(score.T > score.F) type += "T";
+            else if(score.F > score.T) type += "F";
+            else type += "T";
+
+            if(score.J > score.P) type += "J";
+            else if(score.P > score.J) type += "P";
+            else type += "J";
+            // URL传参不变，完美匹配你新版result.html
+            const scoreStr = encodeURIComponent(JSON.stringify(score));
+            location.href = `result.html?type=${type}&score=${scoreStr}`;
+        }
+        renderQ();
+    </script>
+</body>
+</html>
